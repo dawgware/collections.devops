@@ -1,0 +1,4 @@
+- src: https://cwilen@bitbucket.org/deposco/purge.git
+  scm: git
+  name: purge
+  version: "roles"

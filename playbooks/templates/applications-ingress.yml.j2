@@ -1,0 +1,42 @@
+#jinja2: lstrip_blocks: "True", trim_blocks: "True"
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ _deployment_ingress_name }}
+  namespace: {{ namespace }}
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/target-type: instance
+{% if deployment_certificate_arn is defined %}
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80},{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/certificate-arn: {{ deployment_certificate_arn }}
+    alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+{% endif %}
+  labels:
+    app: {{ _deployment_ingress_name }}
+spec:
+  rules:
+{% for app in deployment_apps %}
+    - host: {{ app.host }}
+      http:
+        paths:
+{% if deployment_certificate_arn is defined %}
+          - path: /*
+            pathType: Prefix
+            backend:
+              service:
+                name: ssl-redirect
+                port:
+                  name: use-annotation
+{% endif %}
+{% for app_path in app.paths %}
+          - path: {{ app_path.path }}
+            pathType: {{ app_path.pathtype }}
+            backend:
+              service:
+                name: {{ app_path.servicename }}
+                port:
+                  number: {{ app_path.serviceport | default(80) }}
+{% endfor %}{# end app.paths loop #}
+{% endfor -%}{# end deployment_apps loop #}

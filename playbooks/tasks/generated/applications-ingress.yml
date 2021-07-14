@@ -1,0 +1,57 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: eks1-ua-application-ingress
+  namespace: qa
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/target-type: instance
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80},{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:238044851572:certificate/a6a2e6ef-5b96-4d35-a134-1b98b563141d
+    alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+  labels:
+    app: eks1-ua-application-ingress
+spec:
+  rules:
+    - host: qa-1.deposco.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ssl-redirect
+                port:
+                  name: use-annotation
+          - path: /sso-jwt/
+            pathType: Prefix
+            backend:
+              service:
+                name: sso-jwt-app
+                port:
+                  number: 80
+          - path: /purge/
+            pathType: Prefix
+            backend:
+              service:
+                name: purge
+                port:
+                  number: 80
+    - host: qa-2.deposco.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ssl-redirect
+                port:
+                  name: use-annotation
+          - path: /sso-jwt/
+            pathType: Prefix
+            backend:
+              service:
+                name: sso-jwt-app
+                port:
+                  number: 80

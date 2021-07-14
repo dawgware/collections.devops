@@ -1,0 +1,26 @@
+#
+# Copyright (c) 2021 Deposco Inc. All rights reserved.
+#
+
+---
+
+- name: Deploy sso-jwt Application
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+  - name: set generated dir
+    set_fact:
+      generated_dir: "{{ playbook_dir }}/generated"
+      _deployment_ingress_name: eks1-ua-application-ingress
+
+  - name: Create generated dir
+    file:
+      path: "{{ generated_dir }}"
+      state: directory
+#      mode: 075
+
+  - name: Render Ingress template
+    template:
+      src: "../templates/applications-ingress.yml.j2"
+      dest: "{{ generated_dir }}/applications-ingress.yml"
